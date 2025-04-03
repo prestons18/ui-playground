@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   componentRegistry,
   ComponentDefinition,
@@ -16,11 +16,18 @@ export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({
     Record<string, boolean>
   >({});
 
+  useEffect(() => {
+    console.log("ComponentLibrary mounted");
+    const components = componentRegistry.getAllComponents();
+    console.log("Available components:", components);
+  }, []);
+
   const components = componentRegistry.getAllComponents();
-  const providers = componentRegistry.getAllProviders();
+  console.log("Current components:", components);
 
   // Group components by category
   const componentsByCategory = components.reduce((acc, component) => {
+    console.log("Processing component:", component);
     if (!acc[component.category]) {
       acc[component.category] = [];
     }
@@ -28,7 +35,10 @@ export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({
     return acc;
   }, {} as Record<string, ComponentDefinition[]>);
 
+  console.log("Components by category:", componentsByCategory);
+
   const toggleCategory = (category: string) => {
+    console.log("Toggling category:", category);
     setExpandedCategories((prev) => ({
       ...prev,
       [category]: !prev[category],
@@ -39,6 +49,7 @@ export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({
     e: React.DragEvent,
     component: ComponentDefinition
   ) => {
+    console.log("Starting drag for component:", component);
     e.dataTransfer.setData("application/json", JSON.stringify(component));
     e.dataTransfer.effectAllowed = "copy";
   };
@@ -78,7 +89,10 @@ export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({
                         className="flex items-center p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer transition-colors"
                         draggable
                         onDragStart={(e) => handleDragStart(e, component)}
-                        onClick={() => onAddComponent(component)}
+                        onClick={() => {
+                          console.log("Adding component:", component);
+                          onAddComponent(component);
+                        }}
                       >
                         <Component size={14} className="mr-2 text-gray-500" />
                         <span className="text-sm">{component.name}</span>
@@ -96,7 +110,7 @@ export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({
             Providers
           </h3>
           <div className="space-y-1">
-            {providers.map((provider) => (
+            {componentRegistry.getAllProviders().map((provider) => (
               <div
                 key={provider.id}
                 className="flex items-center p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer transition-colors"

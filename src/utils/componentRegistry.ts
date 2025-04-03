@@ -34,51 +34,121 @@ class ComponentRegistry {
   private libraries: typeof libraries;
 
   private constructor() {
+    console.log("Initializing ComponentRegistry");
     this.libraries = libraries;
+    console.log("Libraries loaded:", JSON.stringify(this.libraries, null, 2));
   }
 
   static getInstance(): ComponentRegistry {
     if (!ComponentRegistry.instance) {
+      console.log("Creating new ComponentRegistry instance");
       ComponentRegistry.instance = new ComponentRegistry();
     }
     return ComponentRegistry.instance;
   }
 
   registerComponent(id: string, component: ComponentType): void {
+    console.log(`Registering component with id: ${id}`, component);
     this.components.set(id, component);
-  }
-
-  registerProvider(id: string, provider: ComponentType): void {
-    this.providers.set(id, provider);
-  }
-
-  getComponent(id: string): ComponentType | undefined {
-    return this.components.get(id);
-  }
-
-  getProvider(id: string): ComponentType | undefined {
-    return this.providers.get(id);
-  }
-
-  getAllComponents(): ComponentDefinition[] {
-    return Object.values(this.libraries.libraries).flatMap(
-      (lib) => lib.components as ComponentDefinition[]
+    console.log(
+      "Current registered components:",
+      Array.from(this.components.keys())
     );
   }
 
+  registerProvider(id: string, provider: ComponentType): void {
+    console.log(`Registering provider '${id}'`);
+    try {
+      this.providers.set(id, provider);
+      console.log(`Provider '${id}' registered successfully`);
+      console.log("Current providers:", this.providers);
+    } catch (error) {
+      console.error(`Error registering provider '${id}':`, error);
+    }
+  }
+
+  getComponent(id: string): ComponentType | undefined {
+    console.log(`Getting component with id: ${id}`);
+    const component = this.components.get(id);
+    console.log("Retrieved component:", component);
+    return component;
+  }
+
+  getProvider(id: string): ComponentType | undefined {
+    console.log(`Getting provider '${id}'`);
+    const provider = this.providers.get(id);
+    if (provider) {
+      console.log(`Provider '${id}' found`);
+    } else {
+      console.log(`Provider '${id}' not found`);
+    }
+    return provider;
+  }
+
+  getAllComponents(): ComponentDefinition[] {
+    console.log("Getting all component definitions");
+    const allComponents: ComponentDefinition[] = [];
+
+    Object.values(this.libraries.libraries).forEach((library) => {
+      console.log("Processing library:", library.name);
+      library.components.forEach((component) => {
+        console.log("Adding component definition:", component);
+        allComponents.push(component);
+      });
+    });
+
+    console.log("All component definitions:", allComponents);
+    return allComponents;
+  }
+
   getAllProviders(): ProviderDefinition[] {
-    return Object.entries(this.libraries.providers).map(([id, provider]) => ({
-      id,
-      ...provider,
-    }));
+    console.log("Getting all provider definitions");
+    try {
+      const providers = Object.entries(this.libraries.providers).map(
+        ([id, provider]) => ({
+          id,
+          ...provider,
+        })
+      );
+      console.log("Provider definitions:", providers);
+      return providers;
+    } catch (error) {
+      console.error("Error getting provider definitions:", error);
+      return [];
+    }
   }
 
   getComponentsByCategory(category: string): ComponentDefinition[] {
-    return this.getAllComponents().filter((comp) => comp.category === category);
+    console.log(`Getting components by category '${category}'`);
+    try {
+      const components = this.getAllComponents().filter(
+        (comp) => comp.category === category
+      );
+      console.log(
+        `Found ${components.length} components in category '${category}'`
+      );
+      return components;
+    } catch (error) {
+      console.error(
+        `Error getting components for category '${category}':`,
+        error
+      );
+      return [];
+    }
   }
 
   getComponentsByTag(tag: string): ComponentDefinition[] {
-    return this.getAllComponents().filter((comp) => comp.tags.includes(tag));
+    console.log(`Getting components by tag '${tag}'`);
+    try {
+      const components = this.getAllComponents().filter((comp) =>
+        comp.tags.includes(tag)
+      );
+      console.log(`Found ${components.length} components with tag '${tag}'`);
+      return components;
+    } catch (error) {
+      console.error(`Error getting components for tag '${tag}':`, error);
+      return [];
+    }
   }
 }
 

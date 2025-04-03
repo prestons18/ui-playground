@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { ComponentState } from "../components/types";
+import { useEditorStore } from "./useEditorStore";
 
 export const GRID_SIZE = 20;
 const MIN_ZOOM = 1;
@@ -13,9 +14,9 @@ interface SelectionBox {
   isSelecting: boolean;
 }
 
-export function useCanvas() {
+export function useCanvas(components: ComponentState[]) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const { zoom, setZoom } = useEditorStore();
   const [isPanning, setIsPanning] = useState(false);
   const [selectionBox, setSelectionBox] = useState<SelectionBox>({
     startX: 0,
@@ -27,116 +28,147 @@ export function useCanvas() {
   const lastPanPosition = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    console.log("useCanvas mounted with components:", components);
+    return () => {
+      console.log("useCanvas unmounted");
+    };
+  }, [components]);
+
+  useEffect(() => {
+    console.log("Canvas state updated:", {
+      pan,
+      zoom,
+      isPanning,
+      selectionBox,
+      componentsCount: components.length,
+    });
+  }, [pan, zoom, isPanning, selectionBox, components]);
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      console.log("useCanvas handleMouseDown:", {
+        button: e.button,
+        target: e.target,
+        clientX: e.clientX,
+        clientY: e.clientY,
+      });
+
+      // Middle mouse button (button 1) for panning
       if (e.button === 1) {
+        console.log("Middle mouse button pressed, starting pan");
         setIsPanning(true);
         lastPanPosition.current = { x: e.clientX, y: e.clientY };
-        document.body.style.cursor = "grabbing";
-      } else if (e.button === 0) {
-        const target = e.target as HTMLElement;
-        if (
-          target === canvasRef.current ||
-          target.closest(".grid-background")
-        ) {
-          const rect = canvasRef.current?.getBoundingClientRect();
-          if (rect) {
-            const x = (e.clientX - rect.left) / zoom - pan.x;
-            const y = (e.clientY - rect.top) / zoom - pan.y;
-            setSelectionBox({
-              startX: x,
-              startY: y,
-              endX: x,
-              endY: y,
-              isSelecting: true,
-            });
-          }
-        }
+        e.preventDefault();
+        return;
       }
-    },
-    [pan, zoom]
-  );
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (isPanning) {
-        const dx = (e.clientX - lastPanPosition.current.x) / zoom;
-        const dy = (e.clientY - lastPanPosition.current.y) / zoom;
-
-        setPan((prev) => ({
-          x: prev.x + dx,
-          y: prev.y + dy,
-        }));
-
-        lastPanPosition.current = { x: e.clientX, y: e.clientY };
-      } else if (selectionBox.isSelecting) {
+      // Left mouse button (button 0) for selection
+      if (e.button === 0) {
+        console.log("Left mouse button pressed, starting selection");
         const rect = canvasRef.current?.getBoundingClientRect();
         if (rect) {
-          const x = (e.clientX - rect.left) / zoom - pan.x;
-          const y = (e.clientY - rect.top) / zoom - pan.y;
-          setSelectionBox((prev) => ({
-            ...prev,
-            endX: x,
-            endY: y,
-          }));
+          const startX = (e.clientX - rect.left) / zoom - pan.x;
+          const startY = (e.clientY - rect.top) / zoom - pan.y;
+          console.log("Selection start position:", { startX, startY });
+          setSelectionBox({
+            startX,
+            startY,
+            endX: startX,
+            endY: startY,
+            isSelecting: true,
+          });
         }
-      }
-    },
-    [isPanning, zoom, pan, selectionBox.isSelecting]
-  );
-
-  const handleMouseUp = useCallback(() => {
-    if (isPanning) {
-      setIsPanning(false);
-      document.body.style.cursor = "default";
-    } else if (selectionBox.isSelecting) {
-      setSelectionBox((prev) => ({
-        ...prev,
-        isSelecting: false,
-      }));
-    }
-  }, [isPanning, selectionBox.isSelecting]);
-
-  const handleWheel = useCallback(
-    (e: WheelEvent) => {
-      e.preventDefault();
-      if (!canvasRef.current) return;
-
-      const rect = canvasRef.current.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      const cursorX = (mouseX - pan.x * zoom) / zoom;
-      const cursorY = (mouseY - pan.y * zoom) / zoom;
-
-      const delta = e.deltaY > 0 ? 0.95 : 1.05;
-      const newZoom = Math.min(Math.max(zoom * delta, MIN_ZOOM), MAX_ZOOM);
-
-      if (newZoom !== zoom) {
-        const newPanX = mouseX / newZoom - cursorX;
-        const newPanY = mouseY / newZoom - cursorY;
-
-        setZoom(newZoom);
-        setPan({ x: newPanX, y: newPanY });
       }
     },
     [zoom, pan]
   );
 
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (isPanning) {
+        console.log("Panning canvas:", {
+          clientX: e.clientX,
+          clientY: e.clientY,
+          lastX: lastPanPosition.current.x,
+          lastY: lastPanPosition.current.y,
+        });
+        const deltaX = e.clientX - lastPanPosition.current.x;
+        const deltaY = e.clientY - lastPanPosition.current.y;
+        setPan({
+          x: pan.x + deltaX / zoom,
+          y: pan.y + deltaY / zoom,
+        });
+        lastPanPosition.current = { x: e.clientX, y: e.clientY };
+      } else if (selectionBox.isSelecting) {
+        console.log("Updating selection box:", {
+          clientX: e.clientX,
+          clientY: e.clientY,
+        });
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (rect) {
+          const endX = (e.clientX - rect.left) / zoom - pan.x;
+          const endY = (e.clientY - rect.top) / zoom - pan.y;
+          setSelectionBox({
+            ...selectionBox,
+            endX,
+            endY,
+          });
+        }
+      }
+    },
+    [isPanning, pan, zoom, selectionBox]
+  );
+
+  const handleMouseUp = useCallback(() => {
+    console.log("Mouse up event:", {
+      wasPanning: isPanning,
+      wasSelecting: selectionBox.isSelecting,
+    });
+    setIsPanning(false);
+    setSelectionBox({
+      ...selectionBox,
+      isSelecting: false,
+    });
+  }, [isPanning, selectionBox]);
+
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      console.log("Wheel event:", {
+        deltaY: e.deltaY,
+        ctrlKey: e.ctrlKey,
+      });
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newZoom = Math.min(Math.max(zoom * delta, MIN_ZOOM), MAX_ZOOM);
+        console.log("Zoom updated:", { currentZoom: zoom, newZoom });
+        setZoom(newZoom);
+      } else {
+        setPan((prevPan) => {
+          const newPan = {
+            x: prevPan.x - e.deltaX / zoom,
+            y: prevPan.y - e.deltaY / zoom,
+          };
+          console.log("Pan updated:", { prevPan, newPan });
+          return newPan;
+        });
+      }
+    },
+    [zoom, setZoom]
+  );
+
   const centerOnComponent = useCallback(
     (component: ComponentState) => {
-      if (!canvasRef.current) return;
-
-      const rect = canvasRef.current.getBoundingClientRect();
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-
-      const targetX =
-        centerX - (component.x * zoom + (component.width * zoom) / 2);
-      const targetY =
-        centerY - (component.y * zoom + (component.height * zoom) / 2);
-
-      setPan({ x: targetX, y: targetY });
+      console.log("Centering on component:", component);
+      const canvasWidth = canvasRef.current?.clientWidth || 0;
+      const canvasHeight = canvasRef.current?.clientHeight || 0;
+      const newPan = {
+        x: -component.x + (canvasWidth / zoom - component.width) / 2,
+        y: -component.y + (canvasHeight / zoom - component.height) / 2,
+      };
+      console.log("New pan position:", newPan);
+      setPan(newPan);
     },
     [zoom]
   );
@@ -153,5 +185,6 @@ export function useCanvas() {
     handleMouseUp,
     handleWheel,
     centerOnComponent,
+    setPan,
   };
 }

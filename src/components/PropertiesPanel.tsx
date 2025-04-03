@@ -40,18 +40,34 @@ export function PropertiesPanel() {
   const panelRef = useRef<HTMLDivElement>(null);
   const resizeHandleRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    console.log("PropertiesPanel mounted");
+    console.log("Initial state:", {
+      selectedComponent,
+      activeTab,
+      expandedSections,
+      panelWidth,
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log("Selected component updated:", selectedComponent);
+  }, [selectedComponent]);
+
   // Handle resizing
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing) {
         const newWidth = window.innerWidth - e.clientX;
         if (newWidth >= 200 && newWidth <= 600) {
+          console.log("Resizing panel to width:", newWidth);
           setPanelWidth(newWidth);
         }
       }
     };
 
     const handleMouseUp = () => {
+      console.log("Stopped resizing panel");
       setIsResizing(false);
     };
 
@@ -67,6 +83,7 @@ export function PropertiesPanel() {
   }, [isResizing]);
 
   if (!selectedComponent) {
+    console.log("No component selected");
     return (
       <div
         ref={panelRef}
@@ -87,7 +104,10 @@ export function PropertiesPanel() {
         <div
           ref={resizeHandleRef}
           className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 transition-colors"
-          onMouseDown={() => setIsResizing(true)}
+          onMouseDown={() => {
+            console.log("Started resizing panel");
+            setIsResizing(true);
+          }}
         >
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-16 bg-gray-700 rounded-full opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
             <GripVertical size={12} className="text-gray-400" />
@@ -101,11 +121,15 @@ export function PropertiesPanel() {
     property: keyof ComponentState,
     value: string
   ) => {
+    console.log(`Changing property '${property}' to:`, value);
     const numValue = parseFloat(value);
     if (!isNaN(numValue)) {
       const updatedComponent = { ...selectedComponent };
       (updatedComponent as any)[property] = numValue;
+      console.log("Updated component:", updatedComponent);
       updateComponent(updatedComponent);
+    } else {
+      console.log("Invalid numeric value:", value);
     }
   };
 
@@ -113,12 +137,14 @@ export function PropertiesPanel() {
     property: keyof ComponentState["shadow"],
     value: string | number
   ) => {
+    console.log(`Changing shadow property '${property}' to:`, value);
     const updatedComponent = { ...selectedComponent };
     if (typeof value === "string") {
       (updatedComponent.shadow as any)[property] = parseFloat(value);
     } else {
       (updatedComponent.shadow as any)[property] = value;
     }
+    console.log("Updated component shadow:", updatedComponent.shadow);
     updateComponent(updatedComponent);
   };
 
@@ -126,16 +152,19 @@ export function PropertiesPanel() {
     property: keyof ComponentState["border"],
     value: string
   ) => {
+    console.log(`Changing border property '${property}' to:`, value);
     const updatedComponent = { ...selectedComponent };
     if (property === "style") {
       updatedComponent.border.style = value as "solid" | "dashed" | "dotted";
     } else if (property === "width" || property === "color") {
       (updatedComponent.border as any)[property] = value;
     }
+    console.log("Updated component border:", updatedComponent.border);
     updateComponent(updatedComponent);
   };
 
   const toggleSection = (section: string) => {
+    console.log(`Toggling section '${section}'`);
     setExpandedSections((prev) => ({
       ...prev,
       [section]: !prev[section],
@@ -196,7 +225,10 @@ export function PropertiesPanel() {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              console.log(`Switching to tab '${tab.id}'`);
+              setActiveTab(tab.id);
+            }}
             className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center gap-2 ${
               activeTab === tab.id
                 ? "text-blue-400 border-b-2 border-blue-400"
@@ -860,7 +892,10 @@ export function PropertiesPanel() {
       <div
         ref={resizeHandleRef}
         className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 transition-colors"
-        onMouseDown={() => setIsResizing(true)}
+        onMouseDown={() => {
+          console.log("Started resizing panel");
+          setIsResizing(true);
+        }}
       >
         <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-16 bg-gray-700 rounded-full opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
           <GripVertical size={12} className="text-gray-400" />

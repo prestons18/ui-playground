@@ -11,9 +11,10 @@
           "description": "Primary button component with multiple variants",
           "tags": ["interactive", "form", "action"],
           "props": {
-            "variant": ["primary", "secondary", "outline", "ghost"],
-            "size": ["sm", "md", "lg"],
-            "disabled": "boolean"
+            "text": "Button",
+            "variant": "primary",
+            "size": "md",
+            "disabled": false
           }
         },
         {
@@ -23,9 +24,10 @@
           "description": "Text input component with validation support",
           "tags": ["form", "text", "validation"],
           "props": {
-            "type": ["text", "password", "email", "number"],
-            "size": ["sm", "md", "lg"],
-            "error": "string"
+            "type": "text",
+            "placeholder": "Input",
+            "size": "md",
+            "error": ""
           }
         }
       ]
@@ -41,8 +43,8 @@
           "description": "Responsive container with max-width",
           "tags": ["layout", "responsive"],
           "props": {
-            "maxWidth": ["sm", "md", "lg", "xl", "full"],
-            "padding": ["none", "sm", "md", "lg"]
+            "maxWidth": "100%",
+            "padding": "0"
           }
         }
       ]

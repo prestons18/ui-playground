@@ -184,6 +184,7 @@ export function Sidebar() {
     removeComponent,
     addComponent,
     updateComponent,
+    reorderComponents,
   } = useEditorStore();
 
   const [expandedCategories, setExpandedCategories] = useState<
@@ -277,6 +278,7 @@ export function Sidebar() {
   };
 
   const handleAddRegistryComponent = (component: ComponentDefinition) => {
+    console.log("Adding registry component:", component);
     const newComponent: ComponentState = {
       id: `${component.id}-${Date.now()}`,
       x: 100,
@@ -305,10 +307,12 @@ export function Sidebar() {
       componentProps: component.props,
     };
 
+    console.log("Created new component:", newComponent);
     addComponent(newComponent);
   };
 
   const toggleComponentVisibility = (component: ComponentState) => {
+    console.log("Toggling visibility for component:", component);
     updateComponent({
       ...component,
       hidden: !component.hidden,
@@ -316,6 +320,7 @@ export function Sidebar() {
   };
 
   const toggleComponentLock = (component: ComponentState) => {
+    console.log("Toggling lock for component:", component);
     updateComponent({
       ...component,
       locked: !component.locked,
@@ -323,6 +328,7 @@ export function Sidebar() {
   };
 
   const duplicateComponent = (component: ComponentState) => {
+    console.log("Duplicating component:", component);
     const newComponent: ComponentState = {
       ...component,
       id: crypto.randomUUID(),
@@ -333,6 +339,7 @@ export function Sidebar() {
   };
 
   const filteredComponents = useMemo(() => {
+    console.log("Filtering components with query:", searchQuery);
     if (!searchQuery) return componentTemplates;
 
     const query = searchQuery.toLowerCase();
@@ -354,6 +361,7 @@ export function Sidebar() {
       );
     });
 
+    console.log("Filtered components:", filtered);
     return filtered;
   }, [searchQuery]);
 
@@ -374,6 +382,25 @@ export function Sidebar() {
     acc[category].push(component);
     return acc;
   }, {} as Record<ComponentCategory, ComponentState[]>);
+
+  useEffect(() => {
+    console.log("Sidebar mounted");
+    console.log("Initial state:", {
+      components,
+      selectedComponent,
+      activeTab,
+      searchQuery,
+      expandedCategories,
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log("Components updated:", components);
+  }, [components]);
+
+  useEffect(() => {
+    console.log("Selected component updated:", selectedComponent);
+  }, [selectedComponent]);
 
   return (
     <div
@@ -463,7 +490,10 @@ export function Sidebar() {
                 >
                   <div
                     className="flex items-center gap-2 cursor-pointer flex-1"
-                    onClick={() => selectComponent(component)}
+                    onClick={() => {
+                      console.log("Selecting component:", component);
+                      selectComponent(component);
+                    }}
                   >
                     <Box size={16} />
                     <span className="text-white text-sm truncate">
@@ -503,7 +533,10 @@ export function Sidebar() {
                     </button>
                     <button
                       className="p-1 text-red-400 hover:text-red-300"
-                      onClick={() => removeComponent(component.id)}
+                      onClick={() => {
+                        console.log("Removing component:", component);
+                        removeComponent(component.id);
+                      }}
                       title="Delete"
                     >
                       <Trash2 size={14} />
