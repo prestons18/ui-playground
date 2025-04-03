@@ -1,0 +1,69 @@
+{
+  "libraries": {
+    "core": {
+      "name": "Core Components",
+      "version": "1.0.0",
+      "components": [
+        {
+          "id": "button",
+          "name": "Button",
+          "category": "inputs",
+          "description": "Primary button component with multiple variants",
+          "tags": ["interactive", "form", "action"],
+          "props": {
+            "variant": ["primary", "secondary", "outline", "ghost"],
+            "size": ["sm", "md", "lg"],
+            "disabled": "boolean"
+          }
+        },
+        {
+          "id": "input",
+          "name": "Input",
+          "category": "inputs",
+          "description": "Text input component with validation support",
+          "tags": ["form", "text", "validation"],
+          "props": {
+            "type": ["text", "password", "email", "number"],
+            "size": ["sm", "md", "lg"],
+            "error": "string"
+          }
+        }
+      ]
+    },
+    "layout": {
+      "name": "Layout Components",
+      "version": "1.0.0",
+      "components": [
+        {
+          "id": "container",
+          "name": "Container",
+          "category": "layout",
+          "description": "Responsive container with max-width",
+          "tags": ["layout", "responsive"],
+          "props": {
+            "maxWidth": ["sm", "md", "lg", "xl", "full"],
+            "padding": ["none", "sm", "md", "lg"]
+          }
+        }
+      ]
+    }
+  },
+  "providers": {
+    "theme": {
+      "name": "ThemeProvider",
+      "description": "Global theme provider with dark mode support",
+      "config": {
+        "defaultTheme": "light",
+        "enableSystemTheme": true
+      }
+    },
+    "toast": {
+      "name": "ToastProvider",
+      "description": "Global toast notifications system",
+      "config": {
+        "position": "bottom-right",
+        "duration": 5000
+      }
+    }
+  }
+} 
